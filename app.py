@@ -2,7 +2,7 @@ import streamlit as st
 from pypdf import PdfReader
 import google.generativeai as genai
 
-genai.configure(api_key="AQ.Ab8RN6KZYdaBfL1CXyaV8LkBHUohPlc8pC6YOrNktVcTESwvlg")
+genai.configure(api_key="AQ.Ab8RN6INLCbKoLpnIf8bYBFOrydyAkk2A-Ol1sdhqAN7WlKPQg")
 
 model = genai.GenerativeModel("gemini-2.0-flash")
 
