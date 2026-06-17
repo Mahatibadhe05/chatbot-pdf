@@ -1,7 +1,12 @@
 import streamlit as st
 from pypdf import PdfReader
+import google.generativeai as genai
 
-st.title("PDF Chatbot")
+genai.configure(api_key="AQ.Ab8RN6KZYdaBfL1CXyaV8LkBHUohPlc8pC6YOrNktVcTESwvlg")
+
+model = genai.GenerativeModel("gemini-2.0-flash")
+
+st.title("AI PDF Chatbot")
 
 uploaded_file = st.file_uploader(
     "Upload PDF",
@@ -28,26 +33,19 @@ if uploaded_file:
 
     if question:
 
-        question = question.lower()
+        prompt = f"""
+        Answer the question ONLY using the information
+        present in the PDF below.
 
-        sentences = text.split(".")
+        PDF:
+        {text}
 
-        answer_found = False
+        Question:
+        {question}
+        """
 
-        for sentence in sentences:
+        response = model.generate_content(prompt)
 
-            if any(word in sentence.lower()
-                   for word in question.split()):
+        st.subheader("Answer")
 
-                st.subheader("Answer")
-
-                st.write(sentence)
-
-                answer_found = True
-
-                break
-
-        if not answer_found:
-            st.write(
-                "Sorry, I could not find an answer in the PDF."
-            )
+        st.write(response.text)
