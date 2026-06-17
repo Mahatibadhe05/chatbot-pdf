@@ -4,11 +4,12 @@ from pypdf import PdfReader
 st.title("PDF Chatbot")
 
 uploaded_file = st.file_uploader(
-    "Upload a PDF",
+    "Upload PDF",
     type="pdf"
 )
 
 if uploaded_file:
+
     reader = PdfReader(uploaded_file)
 
     text = ""
@@ -21,4 +22,32 @@ if uploaded_file:
 
     st.success("PDF uploaded successfully!")
 
-    st.write(text[:3000])
+    question = st.text_input(
+        "Ask a question about the PDF"
+    )
+
+    if question:
+
+        question = question.lower()
+
+        sentences = text.split(".")
+
+        answer_found = False
+
+        for sentence in sentences:
+
+            if any(word in sentence.lower()
+                   for word in question.split()):
+
+                st.subheader("Answer")
+
+                st.write(sentence)
+
+                answer_found = True
+
+                break
+
+        if not answer_found:
+            st.write(
+                "Sorry, I could not find an answer in the PDF."
+            )
