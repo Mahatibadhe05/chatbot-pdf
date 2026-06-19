@@ -1,0 +1,10 @@
+[
+    {
+        "role": "user",
+        "content": "who organised"
+    },
+    {
+        "role": "assistant",
+        "content": "The Pixel Perfect event was organized by the Institute of Electronics and Telecommunication Engineers (IETE), KJSIT."
+    }
+]
