@@ -166,7 +166,7 @@ with st.sidebar:
     st.markdown("### 📎 Files")
 
     uploaded_file = st.file_uploader(
-        "",
+        "Upload File",
         type=["pdf", "docx", "pptx"],
         label_visibility="collapsed"
     )
