@@ -1,5 +1,7 @@
 import streamlit as st
 from pypdf import PdfReader
+from docx import Document
+from pptx import Presentation
 import google.generativeai as genai
 import os
 import json
@@ -9,8 +11,13 @@ import uuid
 # GEMINI API KEY
 # =========================
 
-genai.configure(api_key="AQ.Ab8RN6INLCbKoLpnIf8bYBFOrydyAkk2A-Ol1sdhqAN7WlKPQg")
+from dotenv import load_dotenv
 
+load_dotenv()
+
+genai.configure(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
 model = genai.GenerativeModel("gemini-2.5-flash")
 
 # =========================
@@ -21,14 +28,22 @@ CHAT_DIR = "chats"
 os.makedirs(CHAT_DIR, exist_ok=True)
 
 
-def save_chat(chat_id, messages):
+def save_chat(
+    chat_id,
+    messages,
+    title="New Chat"
+):
     with open(
         f"{CHAT_DIR}/{chat_id}.json",
         "w",
         encoding="utf-8"
     ) as f:
+
         json.dump(
-            messages,
+            {
+                "title": title,
+                "messages": messages
+            },
             f,
             indent=4,
             ensure_ascii=False
@@ -46,9 +61,13 @@ def load_chat(chat_id):
             "r",
             encoding="utf-8"
         ) as f:
+
             return json.load(f)
 
-    return []
+    return {
+        "title": "New Chat",
+        "messages": []
+    }
 
 
 def get_chats():
@@ -63,14 +82,15 @@ def get_chats():
 
             try:
 
-                messages = load_chat(chat_id)
+                data = load_chat(chat_id)
 
-                if len(messages) > 0:
-                    title = messages[0]["content"][:25]
-                else:
-                    title = "New Chat"
+                title = data.get(
+                    "title",
+                    "New Chat"
+                )
 
             except:
+
                 title = "New Chat"
 
             chats.append(
@@ -84,7 +104,7 @@ def get_chats():
 
     return chats
 
-
+    
 # =========================
 # PAGE SETTINGS
 # =========================
@@ -94,6 +114,23 @@ st.set_page_config(
     page_icon="🤖",
     layout="wide"
 )
+
+st.markdown("""
+<style>
+[data-testid="stSidebar"] {
+    background-color: #f5f5f5;
+}
+
+.stButton button {
+    border-radius: 12px;
+}
+
+section[data-testid="stFileUploader"] {
+    padding: 0px;
+    border: none;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # =========================
 # SESSION STATE
@@ -111,6 +148,13 @@ if "messages" not in st.session_state:
 
 if "pdf_text" not in st.session_state:
     st.session_state.pdf_text = ""
+
+if "chat_title" not in st.session_state:
+    st.session_state.chat_title = "New Chat"
+# =========================
+# SIDEBAR
+# =========================
+
 # =========================
 # SIDEBAR
 # =========================
@@ -119,10 +163,25 @@ with st.sidebar:
 
     st.title("📚 Chats")
 
-    if st.button("➕ New Chat"):
+    st.markdown("### 📎 Files")
+
+    uploaded_file = st.file_uploader(
+        "",
+        type=["pdf", "docx", "pptx"],
+        label_visibility="collapsed"
+    )
+
+    st.divider()
+
+    if st.button(
+        "➕ New Chat",
+        use_container_width=True
+):
 
         st.session_state.chat_id = str(uuid.uuid4())
         st.session_state.messages = []
+        st.session_state.pdf_text = ""
+        st.session_state.chat_title = "New Chat"
 
         st.rerun()
 
@@ -132,65 +191,111 @@ with st.sidebar:
 
     for chat in chats:
 
-        if st.button(
-            f"📄 {chat['title']}",
-            use_container_width=True
-        ):
+        col1, col2 = st.columns([5, 1])
 
-            st.session_state.chat_id = chat["id"]
+        with col1:
 
-            st.session_state.messages = load_chat(
-                chat["id"]
-            )
+            if st.button(
+                f"📄 {chat['title']}",
+                key=f"chat_{chat['id']}",
+                use_container_width=True
+            ):
 
-            st.rerun()
+                st.session_state.chat_id = chat["id"]
 
+                data = load_chat(chat["id"])
+
+                st.session_state.messages = data["messages"]
+
+                st.session_state.chat_title = data["title"]
+
+                st.rerun()
+
+        with col2:
+
+            if st.button(
+                "🗑️",
+                key=f"delete_{chat['id']}"
+            ):
+
+                os.remove(
+                    f"{CHAT_DIR}/{chat['id']}.json"
+                )
+
+                st.rerun()
 # =========================
 # MAIN PAGE
 # =========================
 
-st.title("🤖 AI PDF Chatbot")
-
-if st.button("🗑️ Clear Chat"):
-
-    st.session_state.messages = []
-
-    save_chat(
-        st.session_state.chat_id,
-        st.session_state.messages
-    )
-
-    st.rerun()
 
 # =========================
 # PDF UPLOAD
 # =========================
 
-uploaded_file = st.file_uploader(
-    "📄 Upload a PDF",
-    type="pdf"
-)
-
+# =========================
+# FILE UPLOAD
+# =========================
 if uploaded_file:
 
-    reader = PdfReader(uploaded_file)
+    filename = os.path.splitext(
+        uploaded_file.name
+    )[0]
+
+    st.session_state.chat_title = filename
 
     text = ""
 
-    for page in reader.pages:
+    # PDF
+    if uploaded_file.name.endswith(".pdf"):
 
-        extracted = page.extract_text()
+        reader = PdfReader(uploaded_file)
 
-        if extracted:
-            text += extracted
+        for page in reader.pages:
+
+            extracted = page.extract_text()
+
+            if extracted:
+                text += extracted
+
+    # DOCX
+    elif uploaded_file.name.endswith(".docx"):
+
+        doc = Document(uploaded_file)
+
+        for para in doc.paragraphs:
+
+            text += para.text + "\n"
+
+    # PPTX
+    elif uploaded_file.name.endswith(".pptx"):
+
+        prs = Presentation(uploaded_file)
+
+        for slide in prs.slides:
+
+            for shape in slide.shapes:
+
+                if hasattr(shape, "text"):
+
+                    text += shape.text + "\n"
 
     st.session_state.pdf_text = text
 
-    st.success("✅ PDF uploaded successfully!")
-
+    st.success("✅ File uploaded successfully!")
 # =========================
 # DISPLAY CHAT HISTORY
 # =========================
+if len(st.session_state.messages) == 0:
+
+    st.markdown(
+        """
+        <div style="text-align:center; padding:80px;">
+            <h1>✨ Mahati AI</h1>
+            <p>Upload a PDF, DOCX, or PPTX and start chatting.</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 for message in st.session_state.messages:
 
@@ -215,7 +320,8 @@ if question:
 
     save_chat(
         st.session_state.chat_id,
-        st.session_state.messages
+        st.session_state.messages,
+        st.session_state.chat_title
     )
 
     with st.chat_message("user"):
@@ -231,38 +337,76 @@ if question:
                 f"{msg['role']}: "
                 f"{msg['content']}\n"
             )
-
         prompt = f"""
-You are a friendly AI assistant.
+You are Mahati AI.
 
-If the user asks about the uploaded PDF,
-use the PDF as your primary source.
+When a document is uploaded:
 
-If the answer is available in the PDF,
-answer using the PDF.
+- Answer questions about the uploaded document.
+- Respond naturally to conversational messages, greetings,
+  compliments, thanks, and casual chat.
+- If a question is clearly seeking factual information that is
+  unrelated to the uploaded document, politely say:
 
-If the user is chatting normally,
-respond naturally like ChatGPT.
+  "That question is not related to the uploaded document.
+  Please ask about the document or start a new chat."
 
-If information is not available in the PDF,
-you may answer using your own knowledge.
+Examples:
 
-PDF CONTENT:
+User: Hello
+Assistant: Hello! How can I help?
+
+User: Good work
+Assistant: Thank you!
+
+User: Thanks
+Assistant: You're welcome!
+
+User: Who organized this event?
+Assistant: (Answer from document)
+
+User: Who is Elon Musk's child?
+Assistant: That question is not related to the uploaded document.
+
+DOCUMENT:
 {st.session_state.pdf_text[:30000]}
 
 CHAT HISTORY:
 {history}
 
-CURRENT USER MESSAGE:
+USER:
 {question}
 """
 
-        response = model.generate_content(prompt)
-
-        answer = response.text
 
         with st.chat_message("assistant"):
-            st.markdown(answer)
+
+            placeholder = st.empty()
+
+            placeholder.markdown(
+                "🤔 **Mahati AI is thinking...**"
+            )
+
+            full_response = ""
+
+            response = model.generate_content(
+                prompt,
+                stream=True
+            )
+
+            for chunk in response:
+
+                if hasattr(chunk, "text"):
+
+                    full_response += chunk.text
+
+                    placeholder.markdown(
+                        full_response + "▌"
+                    )
+
+            placeholder.markdown(full_response)
+
+            answer = full_response
 
         st.session_state.messages.append(
             {
@@ -273,10 +417,12 @@ CURRENT USER MESSAGE:
 
         save_chat(
             st.session_state.chat_id,
-            st.session_state.messages
-        )
+            st.session_state.messages,
+            st.session_state.chat_title
+)
 
     except Exception as e:
 
         with st.chat_message("assistant"):
+
             st.error(f"Error: {e}")

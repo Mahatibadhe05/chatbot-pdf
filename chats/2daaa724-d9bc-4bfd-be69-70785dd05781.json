@@ -1,0 +1,21 @@
+{
+    "title": "Lab manual_2026_StudentReference",
+    "messages": [
+        {
+            "role": "user",
+            "content": "whar is the file about"
+        },
+        {
+            "role": "assistant",
+            "content": "This document outlines a series of C programming experiments (Experiment No: 05 to 10). It covers various fundamental C concepts including:\n\n*   **Arrays**: One-dimensional, two-dimensional, and character arrays, including operations like finding largest elements, matrix multiplication, sorting, and palindrome checking.\n*   **Functions**: Passing parameters to functions, recursive functions (e.g., for calculating BIO, GCD, and LCM).\n*   **Pointers**: Using pointers with arrays, string manipulation, and call by address (e.g., for swapping numbers and reversing array display).\n*   **Structures**: Defining and using structures to organize related data (e.g., player information and sorting).\n*   **File Handling**: Reading from and writing to files (e.g., copying file contents).\n\nEach experiment includes an aim, problem statement, problem definition (input, process, output), and relevant theoretical explanations."
+        },
+        {
+            "role": "user",
+            "content": "thanks"
+        },
+        {
+            "role": "assistant",
+            "content": "You're welcome!"
+        }
+    ]
+}

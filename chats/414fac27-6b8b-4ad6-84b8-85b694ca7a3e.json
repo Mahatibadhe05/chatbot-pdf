@@ -1,0 +1,53 @@
+{
+    "title": "Extra PHY Q TT1",
+    "messages": [
+        {
+            "role": "user",
+            "content": "hey"
+        },
+        {
+            "role": "assistant",
+            "content": "Hello! How can I help?"
+        },
+        {
+            "role": "user",
+            "content": "what is this about"
+        },
+        {
+            "role": "assistant",
+            "content": "This document is about the \"Pixel Perfect\" event, which is a coding competition focused on front-end development using HTML and CSS. Participants recreate geometric shapes and visual patterns with precision."
+        },
+        {
+            "role": "user",
+            "content": "what is this about"
+        },
+        {
+            "role": "assistant",
+            "content": "This document contains answers to physics questions, specifically about diffraction grating, grating element, the formation and role of a resonant cavity in LASERs, and the Rayleigh criterion."
+        },
+        {
+            "role": "user",
+            "content": "thanlka"
+        },
+        {
+            "role": "assistant",
+            "content": "You're welcome!"
+        },
+        {
+            "role": "user",
+            "content": "elon musk"
+        },
+        {
+            "role": "assistant",
+            "content": "That question is not related to the uploaded document. Please ask about the document or start a new chat."
+        },
+        {
+            "role": "user",
+            "content": "sachin tendulkar how many runs"
+        },
+        {
+            "role": "assistant",
+            "content": "That question is not related to the uploaded document. Please ask about the document or start a new chat."
+        }
+    ]
+}
